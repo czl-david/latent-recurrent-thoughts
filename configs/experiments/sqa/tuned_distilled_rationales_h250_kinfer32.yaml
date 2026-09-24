@@ -1,0 +1,8 @@
+# Evaluation variant of tuned_distilled_rationales_h250 (same run directory): all 32 latents at inference.
+task: sqa
+run_name: tuned_distilled_rationales_h250
+extends: [../../presets/tuned.yaml, ../../presets/tuned_sqa.yaml]
+model: {K_infer: 32}
+data: {pipeline: distilled_rationales}
+answer: {max_tokens: 384}
+train: {eval_every: 400, eval_holdout_n: 250, gen_eval_n: 250, gen_max_new_tokens: 320}

@@ -1,0 +1,5 @@
+# Tuning run: K 32 -> 4; stage 1 of 1500 steps with grid symmetries and the reveal curriculum.
+task: sudoku
+extends: [../../presets/tuned.yaml, ../../presets/tuned_sudoku.yaml]
+train: {eval_every: 250}
+stage1: {steps: 1500, warmup_steps: 100}

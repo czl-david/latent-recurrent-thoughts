@@ -1,0 +1,6 @@
+# Tuning run: one latent per cell; stage 1 of 1500 steps with grid symmetries and the reveal curriculum.
+task: sudoku
+extends: [../../presets/tuned.yaml, ../../presets/tuned_sudoku.yaml]
+model: {K_train: 81, K_infer: 81}
+train: {eval_every: 250}
+stage1: {steps: 1500, warmup_steps: 100}

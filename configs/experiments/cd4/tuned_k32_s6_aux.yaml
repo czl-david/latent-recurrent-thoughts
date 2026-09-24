@@ -1,0 +1,16 @@
+# Tuning run: stage 2 with S = 6 on tuned_k32_autoencode's last stage-1 checkpoint, with shuffled numbers
+# and the auxiliary readout (weight 1; batch 128 with the decoder CE on 16 rows every 4th step).
+task: cd4
+extends: [../../presets/tuned.yaml, ../../presets/tuned_cd4.yaml]
+model: {K_infer: 32, lambda_delta: 1.0e-3, refiner: {S: 6}}
+train: {batch_size: 128, eval_every: 1000, eval_holdout_n: 128, gen_eval_n: 128, gen_max_new_tokens: 96}
+stage1: {steps: 3000, lr: 1.0e-3, warmup_steps: 200, pipeline: autoencode, batch_size: 32}
+stage2:
+  stage1_from: tuned_k32_autoencode
+  stage1_ckpt: last
+  steps: 20000
+  lr: 1.0e-3
+  warmup_steps: 500
+  weight_decay: 0.1
+  pipeline: shuffle
+  aux_readout: {weight: 1.0, ce_batch: 16, ce_every: 4}

@@ -1,0 +1,3 @@
+# Base settings with one latent per cell at training and inference.
+task: sudoku
+model: {K_train: 81, K_infer: 81}

@@ -1,0 +1,4 @@
+# Coding schedule defaults of the tuning runs (use together with tuned.yaml).
+train: {batch_size: 8, log_every: 10, eval_every: 100, eval_holdout_n: 41, gen_eval_n: 41, gen_max_new_tokens: 512}
+stage1: {epochs: 10, warmup_steps: 50}
+stage2: {epochs: 6, warmup_steps: 50}

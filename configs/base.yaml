@@ -1,0 +1,105 @@
+# Every setting, with its base value. Task files (configs/tasks/), presets (configs/presets/) and
+# experiment files (configs/experiments/) override these; see lrt/config.py for the merge order.
+# The base values are the method's architecture and optimization hyperparameters: d'=256, K=32 / K_infer=4,
+# S,H,T = 3,3,4, lambda = 0.01, pre-norm blocks, learned initial refiner states; AdamW (0.9, 0.999, 1e-8),
+# weight decay 0.01, cosine schedule with 5% linear warmup, gradient clipping 1.0, bfloat16, 30 epochs per
+# stage at batch size 64, peak learning rate 3e-4 (stage 1) / 2e-4 (stage 2), gradient checkpointing.
+
+model:
+  d_prime: 256                  # working width of every trainable module
+  heads: 4                      # attention heads of every block
+  rope_theta: 10000.0           # RoPE base (question/query positions in the proposer, latent slots in the refiner)
+  norm_eps: 1.0e-5
+  block_norm: pre               # pre: pre-norm blocks with learnable RMSNorm | post: RMSNorm after each residual (TRM style, parameter-free)
+  final_norm: true              # pre-norm only: RMSNorm before P_up and before P'_up
+  K_train: 32                   # latents emitted by the proposer (both training stages)
+  K_infer: 4                    # first K_infer latents kept at inference, before the refiner
+  lambda_delta: 0.01            # stage-2 loss = CE + lambda * ||Delta||_F^2 (summed over latents and dims, mean over the batch)
+  proposer:
+    blocks: 2                   # bidirectional encoder blocks (self-attention + SwiGLU)
+    mlp_hidden: 1088            # SwiGLU width; 1088 gives ~2.2M parameters for the two blocks at d'=256
+    queries_std: 1.0            # init scale of the K learned query vectors
+    shell_rescale: false        # rescale every L0 row to the decoder's mean embedding-row norm
+  refiner:
+    S: 3                        # outer iterations
+    H: 3                        # high-level cycles per outer iteration
+    T: 4                        # fast z_L updates per cycle (only the final cycle is differentiated)
+    mlp_hidden: 5888            # SwiGLU width of the transition block f; 5888 gives ~4.8M parameters at d'=256
+    init_state: learned         # learned: parameters | fixed: buffers  (z_L^0, z_H^0)
+    init_state_shape: per_slot  # per_slot: [K_train, d'] | shared: [d'] broadcast over latent slots
+    init_std: 1.0
+
+chat:
+  latent_separator: " "         # text between the question display and the latents
+
+data:
+  train_limit: 0                # > 0: train on the first N rows and evaluate on the same rows (a fit check)
+  dedup_against_eval: true      # drop training rows whose question appears in an evaluation split
+  pipeline: none                # data-preparation pipeline for training data: a name under data.pipelines
+  pipelines:                    # named pipelines = ordered steps with parameters (steps: lrt/data/<task>.py)
+    none: []                    # the dataset as provided
+
+train:
+  seed: 0
+  batch_size: 64                # per GPU
+  grad_accum: 1
+  precision: bf16               # compute dtype of the trainable modules: bf16 (autocast) | fp32; the decoder runs in bfloat16
+  grad_ckpt: true               # gradient checkpointing through the frozen decoder
+  prefix_cache: false           # compute the decoder KV of the latent-free prefix [I; x] once without grad
+                                # (faster; mutually exclusive with grad_ckpt)
+  log_every: 25
+  eval_every: 500               # steps between evaluations on the held-out training rows
+  eval_holdout_n: 256           # held-out rows used by those evaluations
+  gen_eval_n: 0                 # > 0: also greedy-decode this many held-out rows (metric gen_acc_*)
+  gen_max_new_tokens: 256
+  eval_aug_n: 0                 # > 0: also probe this many held-out rows transformed by the stage's pipeline
+  select_by: tf_em              # checkpoint selection: tf_em | tf_tok_acc | gen_acc (+ _<select_condition>)
+
+stage1:                         # the proposer, on [I; x; L0]
+  lr: 3.0e-4
+  betas: [0.9, 0.999]
+  eps: 1.0e-8
+  weight_decay: 0.01
+  schedule: cosine              # cosine | constant (after warmup)
+  warmup_frac: 0.05             # linear warmup, as a fraction of the stage's steps
+  warmup_steps: 0               # > 0: overrides warmup_frac
+  min_lr_ratio: 0.0             # cosine floor, as a fraction of lr
+  epochs: 30
+  steps: 0                      # > 0: overrides epochs
+  grad_clip: 1.0
+  ema_decay: 0.0                # > 0: evaluate and save an exponential moving average of the weights
+  select_condition: train       # train: all K_train latents | deploy: first K_infer (+ refiner in stage 2)
+  select_by: null               # a full metric key (e.g. shuffle_gap_aug) instead of train.select_by
+  pipeline: null                # overrides data.pipeline for this stage
+  batch_size: null              # overrides train.batch_size for this stage
+  aux_readout:                  # optional auxiliary loss, not part of the method (off when weight is 0):
+    weight: 0.0                 #   latent k is read out as answer token k through the frozen decoder's
+    scale: 20.0                 #   input-embedding table (cosine logits x scale), for k < min(K, answer tokens)
+    ce_batch: 0                 #   > 0: decoder CE on only the first ce_batch rows of each batch (training)
+    ce_every: 1                 #   decoder CE every ce_every steps (training); the readout covers every step
+
+stage2:                         # the refiner, proposer frozen, on [I; x; L*] + lambda * ||Delta||^2
+  lr: 2.0e-4
+  betas: [0.9, 0.999]
+  eps: 1.0e-8
+  weight_decay: 0.01
+  schedule: cosine
+  warmup_frac: 0.05
+  warmup_steps: 0
+  min_lr_ratio: 0.0
+  epochs: 30
+  steps: 0
+  grad_clip: 1.0
+  ema_decay: 0.0
+  select_condition: deploy
+  select_by: null
+  pipeline: null
+  batch_size: null
+  aux_readout: {weight: 0.0, scale: 20.0, ce_batch: 0, ce_every: 1}   # as in stage1
+  stage1_from: null             # run name whose stage-1 checkpoint to freeze (null: this run's own)
+  stage1_ckpt: best             # best | last
+
+eval:
+  batch_size: 64                # questions whose latents are computed per chunk
+  max_new_tokens: 512
+  splits: []                    # evaluation splits of the task (keys of data.files)

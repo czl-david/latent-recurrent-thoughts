@@ -1,0 +1,6 @@
+# Tuning run: all 32 latents at inference; stage 1 with hints at a 10x learning rate for 800 steps.
+task: cd4
+extends: [../../presets/tuned.yaml, ../../presets/tuned_cd4.yaml]
+model: {K_infer: 32}
+train: {eval_every: 200, eval_holdout_n: 128, gen_eval_n: 64, gen_max_new_tokens: 96}
+stage1: {steps: 800, lr: 3.0e-3, warmup_steps: 100}

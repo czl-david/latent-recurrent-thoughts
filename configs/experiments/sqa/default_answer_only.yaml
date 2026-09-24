@@ -1,0 +1,2 @@
+# Base settings; training data as provided (targets "Answer: yes|no").
+task: sqa

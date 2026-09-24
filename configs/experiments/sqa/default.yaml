@@ -1,0 +1,4 @@
+# The base architecture and optimization (configs/base.yaml); targets are the reference rationales ending in
+# the answer line (the answer with its reference rationale).
+task: sqa
+data: {pipeline: reference_rationales}

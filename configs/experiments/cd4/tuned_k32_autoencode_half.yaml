@@ -1,0 +1,11 @@
+# Tuning run: stage 1 mixing the autoencoding target (half the rows) with the original task; selected by
+# the instance-information gap on the autoencoded holdout rows.
+task: cd4
+extends: [../../presets/tuned.yaml, ../../presets/tuned_cd4.yaml]
+model: {K_infer: 32, lambda_delta: 1.0e-3}
+data:
+  pipelines:
+    autoencode_half: [{step: autoencode, p_apply: 0.5}]
+train: {eval_every: 250, eval_holdout_n: 128, eval_aug_n: 128, gen_eval_n: 128, gen_max_new_tokens: 96}
+stage1: {steps: 2000, lr: 1.0e-3, warmup_steps: 200, pipeline: autoencode_half, select_by: shuffle_gap_aug}
+stage2: {steps: 6000, lr: 3.0e-4, warmup_steps: 300, pipeline: none}

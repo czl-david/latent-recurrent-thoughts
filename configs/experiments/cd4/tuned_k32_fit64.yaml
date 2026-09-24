@@ -1,0 +1,7 @@
+# Tuning run (fit check): stage 1 on the first 64 training rows, evaluated on the same rows.
+task: cd4
+extends: [../../presets/tuned.yaml, ../../presets/tuned_cd4.yaml]
+model: {K_infer: 32}
+data: {train_limit: 64}
+train: {eval_every: 100, eval_holdout_n: 64, gen_eval_n: 0, select_by: tf_em}
+stage1: {steps: 800, lr: 1.0e-3, warmup_steps: 50, pipeline: none}

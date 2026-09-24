@@ -1,0 +1,5 @@
+# Tuning run: as tuned_distilled_rationales, keeping only sampled (not hint-guided) distilled rationales.
+task: sqa
+extends: [../../presets/tuned.yaml, ../../presets/tuned_sqa.yaml]
+data: {pipeline: distilled_rationales_sampled}
+train: {eval_every: 200, gen_max_new_tokens: 384}

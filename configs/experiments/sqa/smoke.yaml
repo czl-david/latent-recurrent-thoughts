@@ -1,0 +1,6 @@
+# A tiny end-to-end run (8 training rows, 2 steps per stage) for checking the setup.
+task: sqa
+data: {train_limit: 8}
+train: {batch_size: 4, log_every: 1, eval_every: 2, eval_holdout_n: 8, gen_eval_n: 4, gen_max_new_tokens: 64}
+stage1: {steps: 2, warmup_steps: 1}
+stage2: {steps: 2, warmup_steps: 1}

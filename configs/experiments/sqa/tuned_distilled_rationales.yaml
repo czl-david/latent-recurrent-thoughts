@@ -1,0 +1,5 @@
+# Tuning run: reference + distilled rationales (sampled and hint-guided); 100 held-out questions evaluated.
+task: sqa
+extends: [../../presets/tuned.yaml, ../../presets/tuned_sqa.yaml]
+data: {pipeline: distilled_rationales}
+train: {eval_every: 200, gen_max_new_tokens: 384}

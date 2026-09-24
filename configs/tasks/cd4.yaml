@@ -1,0 +1,28 @@
+# Countdown-4: four numbers and a target; scored by strict validity of any 3-step chain in the output.
+data:
+  module: lrt.data.countdown:CountdownTask
+  files: {train: cd4/cd4_train.jsonl, test: cd4/cd4_test.jsonl}         # rows {"input": "a,b,c,d,target", "output": chain}
+  expect_rows: {train: 500000, test: 1000}
+  required_files: []
+  holdout: 512
+  max_x_tokens: 32
+  pipelines:                    # steps: shuffle, hints, num_drop, autoencode (lrt/data/countdown.py)
+    none: []
+    shuffle: [{step: shuffle}]
+    hints: [{step: hints, prob_start: 0.6, prob_end: 0.0, ramp_frac: 0.6, max_steps: 2}]
+    shuffle_hints:
+      - {step: shuffle}
+      - {step: hints, prob_start: 0.6, prob_end: 0.0, ramp_frac: 0.6, max_steps: 2}
+    num_drop: [{step: num_drop, p_apply: 0.7, q: 0.4}]
+    autoencode: [{step: autoencode, p_apply: 1.0}]
+prompt:
+  instruction: "You are solving a countdown-4 problem. Use the first four numbers exactly once with +, -, *, /, and parentheses to produce the fifth (target) number. Show your steps as 'a OP b = c, c OP d = e, ...' separated by commas, with the last computed value equal to the target. Example: input '97,2,59,5,14', output '97-59=38,38/2=19,19-5=14'."
+answer:
+  max_tokens: 48
+eval:
+  splits: [test]
+  max_new_tokens: 512
+train:
+  select_by: gen_acc            # any valid chain is correct, so selection uses greedy generations
+  gen_eval_n: 256
+  gen_max_new_tokens: 128

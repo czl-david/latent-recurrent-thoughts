@@ -1,0 +1,30 @@
+# Sudoku: 81-character puzzles (0 = blank); scored by exact match of the first 81-digit run.
+data:
+  module: lrt.data.sudoku:SudokuTask
+  files: {train: sudoku_ye2024/train.jsonl, test: sudoku_ye2024/test.jsonl}   # rows {"puzzle", "solution"}
+  expect_rows: {train: 100000, test: 1000}
+  required_files: []
+  holdout: 512                  # last N training rows, used only for checkpoint selection
+  max_x_tokens: 128
+  pipelines:                    # steps: symmetry, reveal, given_drop, autoencode (lrt/data/sudoku.py)
+    none: []
+    symmetry: [{step: symmetry}]
+    symmetry_reveal:
+      - {step: symmetry}
+      - {step: reveal, min_start: 0.0, min_end: 0.0, max_start: 0.95, max_end: 0.6, ramp_frac: 0.7, p_none: 0.2}
+    symmetry_given_drop:
+      - {step: symmetry}
+      - {step: given_drop, p_apply: 0.7, q_min: 0.3, q_max: 0.8}
+    symmetry_autoencode:
+      - {step: symmetry}
+      - {step: autoencode, p_apply: 1.0}
+prompt:
+  instruction: "Solve this Sudoku. Blanks are 0. Output ONLY the 81 solved digits as a single line, with no spaces or explanation."
+answer:
+  max_tokens: 96                # 81 digits + <|im_end|>
+eval:
+  splits: [test]
+  max_new_tokens: 512
+train:
+  select_by: tf_em
+  gen_max_new_tokens: 128

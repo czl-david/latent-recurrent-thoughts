@@ -1,0 +1,11 @@
+# Tuning run: stage 1 on easy puzzles only (80-90% of the blanks revealed throughout the stage).
+task: sudoku
+extends: [../../presets/tuned.yaml, ../../presets/tuned_sudoku.yaml]
+model: {K_train: 81, K_infer: 81}
+data:
+  pipelines:
+    symmetry_reveal_easy:
+      - {step: symmetry}
+      - {step: reveal, min_start: 0.8, min_end: 0.8, max_start: 0.9, max_end: 0.9, ramp_frac: 0.7, p_none: 0.0}
+train: {eval_every: 250, eval_holdout_n: 128, eval_aug_n: 128}
+stage1: {steps: 1500, lr: 1.0e-3, warmup_steps: 100, pipeline: symmetry_reveal_easy}

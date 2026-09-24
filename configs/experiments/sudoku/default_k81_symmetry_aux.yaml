@@ -1,0 +1,7 @@
+# Base optimization with one latent per cell, S = 6, a lighter residual penalty, grid-symmetry augmentation
+# and the auxiliary readout loss in both stages (decoder CE on 16 of the 64 rows, every 4th step).
+task: sudoku
+model: {K_train: 81, K_infer: 81, lambda_delta: 1.0e-4, refiner: {S: 6}}
+data: {pipeline: symmetry}
+stage1: {aux_readout: {weight: 10.0, ce_batch: 16, ce_every: 4}}
+stage2: {aux_readout: {weight: 10.0, ce_batch: 16, ce_every: 4}}

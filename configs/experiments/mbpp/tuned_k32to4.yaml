@@ -1,0 +1,4 @@
+# Tuning run: K 32 -> 4 with the tuning runs' implementation settings; training data as provided.
+task: mbpp
+extends: [../../presets/tuned.yaml, ../../presets/tuned_mbpp.yaml]
+train: {eval_every: 200}

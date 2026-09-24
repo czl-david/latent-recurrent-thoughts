@@ -1,0 +1,30 @@
+# Python coding: trained on MBPP; evaluated on the local MBPP test split and on HumanEval (same stack).
+data:
+  module: lrt.data.coding:CodingTask
+  files:
+    train: coding/mbpp/train.jsonl            # task_id 1-601
+    test: coding/mbpp/test.jsonl              # task_id 602-974
+    humaneval: coding/human-eval/test.jsonl   # evaluation only
+  function_prompt_split: humaneval            # the split whose rows are function prompts (signature + docstring)
+  verifier: coding/verify.py                  # sandboxed test runner, relative to $LRT_DATA_ROOT
+  expect_rows: {train: 601, test: 373, humaneval: 164}
+  required_files: [coding/verify.py]
+  holdout: 41
+  max_x_tokens: 512             # longer training prompts are dropped
+  pipelines:                    # steps: target_files (lrt/data/coding.py)
+    none: []
+    self_distilled: [{step: target_files, files: ["gen:mbpp_selfdistill.jsonl"]}]   # written by lrt.distill
+prompt:
+  instruction: ""               # MBPP: the task text and its test assertions only
+  humaneval_instruction: "Complete the following Python function. Provide the complete function implementation, including the signature, inside a single ```python code block."
+answer:
+  max_tokens: 512
+eval:
+  splits: [test, humaneval]
+  max_new_tokens: 2048
+  batch_size: 32
+train:
+  select_by: gen_acc            # held-out pass@1 through the sandboxed verifier
+  eval_holdout_n: 41
+  gen_eval_n: 41
+  gen_max_new_tokens: 512

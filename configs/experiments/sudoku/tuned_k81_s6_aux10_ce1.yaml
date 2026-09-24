@@ -1,0 +1,20 @@
+# Tuning run: as tuned_k81_s6_aux10_ce4 with the decoder CE on 16 of 128 rows at every step.
+task: sudoku
+extends: [../../presets/tuned.yaml, ../../presets/tuned_sudoku.yaml]
+model: {K_train: 81, K_infer: 81, lambda_delta: 1.0e-4, refiner: {S: 6}}
+train: {batch_size: 128, eval_every: 500, eval_holdout_n: 64, gen_eval_n: 0}
+stage1:                         # identical to tuned_k81_s6_aux (reused below through stage1_from)
+  steps: 3000
+  lr: 1.0e-3
+  warmup_steps: 300
+  pipeline: symmetry
+  batch_size: 128
+  aux_readout: {weight: 1.0, ce_batch: 16, ce_every: 4}
+stage2:
+  stage1_from: tuned_k81_s6_aux
+  steps: 8000
+  lr: 1.0e-3
+  warmup_steps: 500
+  weight_decay: 0.1
+  pipeline: symmetry
+  aux_readout: {weight: 10.0, ce_batch: 16, ce_every: 1}

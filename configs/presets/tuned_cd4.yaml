@@ -1,0 +1,7 @@
+# Countdown-4 schedule and data defaults of the tuning runs (use together with tuned.yaml).
+data:
+  pipelines:
+    hints_stage2: [{step: hints, prob_start: 0.3, prob_end: 0.0, ramp_frac: 0.5, max_steps: 1}]
+train: {batch_size: 32, log_every: 25, eval_every: 500, eval_holdout_n: 256, gen_eval_n: 256, gen_max_new_tokens: 128}
+stage1: {epochs: 1, warmup_steps: 300, pipeline: hints}
+stage2: {epochs: 1, warmup_steps: 300, pipeline: hints_stage2}

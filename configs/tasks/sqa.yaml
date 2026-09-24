@@ -1,0 +1,28 @@
+# StrategyQA: yes/no questions; scored by the final 'Answer: yes|no'.
+data:
+  module: lrt.data.strategyqa:StrategyQATask
+  files: {train: strategyqa/train.jsonl, test: strategyqa/test.jsonl}   # rows {"question", "answer": bool}
+  expect_rows: {train: 2061, test: 229}
+  required_files: [strategyqa/train_distilled_nothink.jsonl]           # reference rationales (rationale pipelines)
+  holdout: 250                  # the last 250 training questions, whatever the pipeline
+  max_x_tokens: 64
+  pipelines:                    # steps: rationales (lrt/data/strategyqa.py)
+    none: []                    # targets "Answer: yes|no"
+    reference_rationales:       # targets: the reference rationale ending in the answer line
+      - {step: rationales, files: [strategyqa/train_distilled_nothink.jsonl]}
+    distilled_rationales:       # plus rationales written by lrt.distill (sampled, and hint-guided with --hint)
+      - {step: rationales, files: [strategyqa/train_distilled_nothink.jsonl, "gen:sqa_rationales.jsonl"]}
+    distilled_rationales_sampled:
+      - {step: rationales, files: [strategyqa/train_distilled_nothink.jsonl, "gen:sqa_rationales.jsonl"], sources: [sample]}
+prompt:
+  instruction: "Answer the following yes/no question. After reasoning, end your response with a single line 'Answer: yes' or 'Answer: no'."
+answer:
+  max_tokens: 640
+eval:
+  splits: [test]
+  max_new_tokens: 2048
+train:
+  select_by: gen_acc            # held-out answer accuracy of greedy generations
+  eval_holdout_n: 250
+  gen_eval_n: 250
+  gen_max_new_tokens: 512

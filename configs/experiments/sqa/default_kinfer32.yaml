@@ -1,0 +1,4 @@
+# As default.yaml, keeping all 32 latents at inference.
+task: sqa
+model: {K_infer: 32}
+data: {pipeline: reference_rationales}

@@ -1,0 +1,3 @@
+# Base settings; reference rationales plus rationales written by lrt.distill (gen:sqa_rationales.jsonl).
+task: sqa
+data: {pipeline: distilled_rationales}

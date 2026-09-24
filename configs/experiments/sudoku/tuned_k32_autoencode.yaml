@@ -1,0 +1,5 @@
+# Tuning run: as tuned_k81_autoencode with K 32 -> 4.
+task: sudoku
+extends: [../../presets/tuned.yaml, ../../presets/tuned_sudoku.yaml]
+train: {eval_every: 250, eval_holdout_n: 128, eval_aug_n: 128}
+stage1: {steps: 3000, lr: 1.0e-3, warmup_steps: 200, pipeline: symmetry_autoencode}

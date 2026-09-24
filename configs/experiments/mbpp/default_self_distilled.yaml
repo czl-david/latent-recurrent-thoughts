@@ -1,0 +1,4 @@
+# Base settings; training targets replaced by the decoder's own passing solutions
+# (gen:mbpp_selfdistill.jsonl, written by lrt.distill).
+task: mbpp
+data: {pipeline: self_distilled}

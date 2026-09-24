@@ -1,0 +1,10 @@
+# Training environment (install torch first, matching your CUDA version). The SGLang server used for fast
+# evaluation lives in a separate environment (see README.md).
+torch>=2.8
+transformers>=4.57,<4.58
+safetensors>=0.6
+pyyaml>=6.0
+numpy>=2.0
+httpx>=0.28
+requests>=2.32
+pytest>=8

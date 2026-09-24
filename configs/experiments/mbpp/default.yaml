@@ -1,0 +1,3 @@
+# The base architecture and optimization (configs/base.yaml); training data as provided.
+# Evaluation splits: the MBPP test split and HumanEval (the same trained stack).
+task: mbpp

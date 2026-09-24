@@ -1,0 +1,6 @@
+# Tuning run: as tuned_k81_reveal with a 10x learning rate for 800 steps.
+task: sudoku
+extends: [../../presets/tuned.yaml, ../../presets/tuned_sudoku.yaml]
+model: {K_train: 81, K_infer: 81}
+train: {eval_every: 200, eval_holdout_n: 128}
+stage1: {steps: 800, lr: 3.0e-3, warmup_steps: 100}

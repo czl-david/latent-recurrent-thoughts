@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+outputs/
+results/
+logs/
+.idea/
+.vscode/
+.DS_Store
+scripts/env.sh
+.env

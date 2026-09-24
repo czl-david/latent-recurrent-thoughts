@@ -1,0 +1,6 @@
+# Tuning run: stage 1 with an autoencoding target (blank grid shown to the decoder, target = the puzzle).
+task: sudoku
+extends: [../../presets/tuned.yaml, ../../presets/tuned_sudoku.yaml]
+model: {K_train: 81, K_infer: 81}
+train: {eval_every: 250, eval_holdout_n: 128, eval_aug_n: 128}
+stage1: {steps: 3000, lr: 1.0e-3, warmup_steps: 200, pipeline: symmetry_autoencode}

@@ -1,0 +1,27 @@
+# Tuning run: stage 2 on tuned_k81_s6_aux's proposer with an EMA and an easy-to-hard reveal curriculum
+# (half the rows get up to 60% of the blanks revealed, ramping to none over the first 40% of the stage).
+task: sudoku
+extends: [../../presets/tuned.yaml, ../../presets/tuned_sudoku.yaml]
+model: {K_train: 81, K_infer: 81, lambda_delta: 1.0e-4, refiner: {S: 6}}
+train: {batch_size: 128, eval_every: 500, eval_holdout_n: 64, gen_eval_n: 0}
+stage1:                         # identical to tuned_k81_s6_aux (reused below through stage1_from)
+  steps: 3000
+  lr: 1.0e-3
+  warmup_steps: 300
+  pipeline: symmetry
+  batch_size: 128
+  aux_readout: {weight: 1.0, ce_batch: 16, ce_every: 4}
+stage2:
+  stage1_from: tuned_k81_s6_aux
+  steps: 15000
+  lr: 1.0e-3
+  warmup_steps: 500
+  weight_decay: 0.1
+  ema_decay: 0.999
+  pipeline: symmetry_reveal_ramp
+  aux_readout: {weight: 1.0, ce_batch: 16, ce_every: 4}
+data:
+  pipelines:
+    symmetry_reveal_ramp:
+      - {step: symmetry}
+      - {step: reveal, min_start: 0.0, min_end: 0.0, max_start: 0.6, max_end: 0.0, ramp_frac: 0.4, p_none: 0.5}

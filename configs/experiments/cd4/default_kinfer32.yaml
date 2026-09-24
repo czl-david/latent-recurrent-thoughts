@@ -1,0 +1,3 @@
+# Base settings keeping all 32 latents at inference.
+task: cd4
+model: {K_infer: 32}

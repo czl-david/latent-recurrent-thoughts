@@ -1,0 +1,5 @@
+# Tuning run: as tuned_k32to4_hints without hints.
+task: cd4
+extends: [../../presets/tuned.yaml, ../../presets/tuned_cd4.yaml]
+train: {eval_every: 250, gen_eval_n: 128, gen_max_new_tokens: 96}
+stage1: {steps: 1500, warmup_steps: 100, select_condition: deploy, pipeline: none}
